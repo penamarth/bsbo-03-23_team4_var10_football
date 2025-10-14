@@ -1,0 +1,57 @@
+```plantuml
+@startuml
+actor Кассир
+
+activate Stadium
+
+Кассир -> Stadium : CreateSale(type)
+Stadium -> Sale : create()
+activate Sale
+
+
+loop Для всех мест, которых хочет заброинровать пользователь
+
+Кассир -> Stadium : CreateTicket(match_datetime, grandstand_id)
+Stadium -> Sale : CreateTicket(match_datetime, grandstand_id)
+Sale -> Ticket : create(match_datetime, grandstand_id)
+Sale <- Ticket : ticket_object
+
+end loop
+
+
+Кассир -> Stadium : MakePrice()
+Stadium -> Sale : MakePrice()
+
+
+loop Для всех билетов в списке
+
+Sale -> Sale : CalcPrice(price)
+
+end loop
+
+
+Stadium <- Sale : full_price
+Кассир <- Stadium : full_price
+
+Кассир -> Stadium : MakePayment(cash)
+Stadium -> Sale : MakePayment(cash)
+Sale -> Payment : create()
+
+activate Payment
+Sale -> Payment : MakePayment(cash)
+Sale <- Payment : Чек о продаже билетов
+Sale -> Payment : close()
+Sale <- Payment : true
+deactivate Payment
+
+Stadium <- Sale : Чек о продаже билетов, билеты
+Кассир <- Stadium : Чек о продаже билетов, билеты
+
+
+Кассир -> Stadium : CloseSale()
+Stadium -> Sale : close()
+Stadium <- Sale : true
+deactivate Sale
+Кассир <- Stadium : Сообщение об успешном окончании операции
+@enduml
+```
