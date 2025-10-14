@@ -11,9 +11,9 @@ activate Sale
 
 loop Для всех мест, которых хочет заброинровать пользователь
 
-Кассир -> Stadium : CreateTicket(match_datetime, grandstand_id)
-Stadium -> Sale : CreateTicket(match_datetime, grandstand_id)
-Sale -> Ticket : create(match_datetime, grandstand_id)
+Кассир -> Stadium : CreateTicket(match_datetime, grandstand_sector, grandstand_row, grandstand_row_seat)
+Stadium -> Sale : CreateTicket(match_datetime, grandstand_sector, grandstand_row, grandstand_row_seat)
+Sale -> Ticket : create(match_datetime, grandstand_sector, grandstand_row, grandstand_row_seat)
 Sale <- Ticket : ticket_object
 
 end loop
@@ -44,7 +44,7 @@ Sale -> Payment : close()
 Sale <- Payment : true
 deactivate Payment
 
-Sale -> Grandstand : ChangeBooking(grandstand_id)
+Sale -> Grandstand : ChangeBooking(grandstand_sector, grandstand_row, grandstand_row_seat)
 
 Sale -> Log : MakeLogSale(datetime_now, full_price, tickets[])
 
