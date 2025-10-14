@@ -44,6 +44,10 @@ Sale -> Payment : close()
 Sale <- Payment : true
 deactivate Payment
 
+Sale -> Grandstand : ChangeBooking(grandstand_id)
+
+Sale -> Log : MakeLogSale(datetime_now, full_price, tickets[])
+
 Stadium <- Sale : Чек о продаже билетов, билеты
 Кассир <- Stadium : Чек о продаже билетов, билеты
 
