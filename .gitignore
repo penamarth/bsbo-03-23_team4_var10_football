@@ -1,0 +1,36 @@
+# Visual Studio files
+/FTS/.vs/
+/FTS/bin/
+/FTS/obj/
+*.user
+*.suo
+*.csproj.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Bb]uild/
+bld/
+
+# NuGet
+[Nn]uget/
+*.nupkg
+packages/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Runtime files
+*.pidb
+*.ide
