@@ -9,19 +9,19 @@
 *.sln.docstates
 
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Bb]uild/
-bld/
+/FTS/[Dd]ebug/
+/FTS/[Dd]ebugPublic/
+/FTS/[Rr]elease/
+/FTS/[Rr]eleases/
+/FTS/x64/
+/FTS/x86/
+/FTS/[Bb]uild/
+/FTS/bld/
 
 # NuGet
-[Nn]uget/
+/FTS/[Nn]uget/
 *.nupkg
-packages/
+/FTS/packages/
 
 # IDE files
 .vscode/

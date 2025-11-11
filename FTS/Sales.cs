@@ -93,6 +93,7 @@ namespace Sales
         internal void MakePayment(decimal cash) // ВОЗВРАЩЕНИЕ ЧЕКА О ПРОДАЖЕ БИЛЕТОВ ???
         {
             // КАК БУДЕТ ОСУЩЕСТВЛЯТЬСЯ ОПЛАТА ???
+            // В БУДУЩЕМ ПОДКЛЮЧИТЬ ПАТТЕРН АДАПТЕР (YOMANY)
         }
     }
 

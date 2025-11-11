@@ -34,14 +34,10 @@ namespace StadiumStructure
                     children[index] = child_correct;
                 }
                 else
-                {
                     throw new ArgumentException($"ID = {id}: {child_type} с таким ID не найден");
-                }
             }
             else
-            {
                 throw new ArgumentException($"Дочерний объект должен быть типа {typeof(T).Name}");
-            }
         }
 
         protected object GetChild<T>(int id, string child_type) where T : IGrandstand
