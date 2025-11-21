@@ -37,7 +37,7 @@ namespace Sales
             tickets.Add(new TicketSession(datetime_start, datetime_end, sector_id));
         }
 
-        internal decimal MakePrice() // ЦЕНА КАЖДОГО БИЛЕТА ЕЩЁ НЕ УСТАНОВЛЕНА 
+        internal decimal MakePrice() // ЦЕНА КАЖДОГО БИЛЕТА ЕЩЁ НЕ УСТАНОВЛЕНА - ВЕРОЯТНО, СДЕЛАТЬ УСТАНОВКУ ЗДЕСЬ ПО УСЛОВНЫМ ПАРАМЕТРАМ (НОМЕР СЕКТОРА И ПРОЧЕЕ)
         {
             decimal price = 0;
 
@@ -48,7 +48,7 @@ namespace Sales
             return full_price;
         }
 
-        internal void MakePayment(decimal cash) // ВОЗВРАЩЕНИЕ ЧЕКА О ПРОДАЖЕ БИЛЕТОВ ???
+        internal void MakePayment(decimal cash) // ВОЗВРАЩЕНИЕ ЧЕКА О ПРОДАЖЕ БИЛЕТОВ ??? - ЛИБО VIEW-КОНТРОЛЛЕР (КЛАСС ТОЛЬКО С ОТКРЫТЫМИ СВОЙСТВАМИ), ЛИБО JSON|МАССИВ
         {
             if (cash < full_price)
                 throw new InvalidOperationException($"Недостаточно средств для оплаты. Цена продажи: {full_price}, внесено: {cash}");
@@ -93,7 +93,7 @@ namespace Sales
         internal void MakePayment(decimal cash) // ВОЗВРАЩЕНИЕ ЧЕКА О ПРОДАЖЕ БИЛЕТОВ ???
         {
             // КАК БУДЕТ ОСУЩЕСТВЛЯТЬСЯ ОПЛАТА ???
-            // В БУДУЩЕМ ПОДКЛЮЧИТЬ ПАТТЕРН АДАПТЕР (YOMANY)
+            // В БУДУЩЕМ ПОДКЛЮЧИТЬ ПАТТЕРН АДАПТЕР (YOMANY) - СДЕЛАТЬ ЗАГЛУШКУ ВМЕСТО ВНЕШНЕЙ СИСТЕМЫ
         }
     }
 
@@ -108,7 +108,7 @@ namespace Sales
 
         internal void MakeLogSale(DateTime datetime, decimal full_price, List<Ticket> tickets)
         { 
-            sale_operations.Add((datetime, full_price, tickets));
+            sale_operations.Add((datetime, full_price, tickets)); // ЗДЕСЬ МОЖНО ОБРАЩАТЬСЯ КО ВСЕМ ТИПАМ БИЛЕТОВ
         }
     }
 }

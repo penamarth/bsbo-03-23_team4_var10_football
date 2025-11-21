@@ -54,9 +54,9 @@ namespace Tickets
         }
     }
 
-    internal class TicketSession : Ticket // АБОНЕМЕНТ НИКУДА НЕ ПРИВЯЗЫВАЕТСЯ - СОЗДАТЬ ОТДЕЛЬНЫЙ КЛАСС-КОНТЕЙНЕР ДЛЯ АБОНЕМЕНТОВ ???
+    internal class TicketSession : Ticket // АБОНЕМЕНТ НИКУДА НЕ ПРИВЯЗЫВАЕТСЯ - ДОПОЛНИТЬ КЛАСС ЛОГ, ТАМ МОЖНО ОБРАЩАТЬСЯ
     {
-        private int ticket_session_id;    // КАК БУДЕТ ИНИЦИАЛИЗИРОВАТЬСЯ ID И ПРОВЕРЯТЬСЯ ЕГО УНИКАЛЬНОСТЬ ???
+        private int ticket_session_id;    // КАК БУДЕТ ИНИЦИАЛИЗИРОВАТЬСЯ ID И ПРОВЕРЯТЬСЯ ЕГО УНИКАЛЬНОСТЬ ??? - ПОКА НЕ ЗАОСТРЯЕМ  ВНИМАНИЕ
         private int sector_id;            // БУДЕМ ЛИ МЫ ЧТО-ТО ДЕЛАТЬ С СЕКТОРОМ В ПРЕЦЕДЕНТЕ ПРОДАЖИ ???
         private DateTime datetime_start;
         private DateTime datetime_end;

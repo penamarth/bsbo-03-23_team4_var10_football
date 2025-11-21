@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Sales;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Sales;
 using Tickets;
 
 namespace StadiumStructure
@@ -101,7 +101,7 @@ namespace StadiumStructure
 
         internal abstract bool GetBooking(List<int> seat_path);
         internal abstract void ChangeBooking(bool booking, List<int> seat_path);
-        internal abstract void GetSeatsBooking(); // нигде пока не расписан
+        internal abstract Dictionary<string, object> GetSeatsBooking();
     }
 
     internal class Stadium
@@ -208,14 +208,19 @@ namespace StadiumStructure
 
         }
 
-        internal void SelectMatchSeats(int matches_id)
+        internal Dictionary<string, object> SelectMatchSeats(int matches_id)
         {
-
+            return matches[matches_id].GetSeatsBooking();
         }
 
         internal Match GetMatch(DateTime datetime_start)
         {
             return matches.FirstOrDefault(match => match.GetDatetimeStart() == datetime_start);
+        }
+
+        internal List<Match> GetMatches()
+        {
+            return matches;
         }
 
         internal void OpenEditingMatch()
@@ -301,6 +306,22 @@ namespace StadiumStructure
         {
             ChangeBooking<Sector>(booking, seat_path, "Sector");
         }
+
+        internal override Dictionary<string, object> GetSeatsBooking()
+        {
+            Dictionary<int, object> sectors_rows_seats_values = new Dictionary<int, object>();
+
+            foreach (Sector sector in children.OfType<Sector>())
+                sectors_rows_seats_values.Add(sector.GetID(), sector.GetSeatsBooking());
+
+            Dictionary<string, object> sectors_rows_seats_id_booking = new Dictionary<string, object>
+            {
+                ["datetime_start"] = datetime_start,
+                ["sectors"] = sectors_rows_seats_values
+            };
+
+            return sectors_rows_seats_id_booking;
+        }
     }
 
     internal class Sector : Grandstand
@@ -342,6 +363,21 @@ namespace StadiumStructure
         internal override void ChangeBooking(bool booking, List<int> seat_path)
         {
             ChangeBooking<Row>(booking, seat_path, "Row");
+        }
+
+        internal override Dictionary<string, object> GetSeatsBooking()
+        {
+            Dictionary<int, object> rows_seats_values = new Dictionary<int, object>();
+
+            foreach (Row row in children.OfType<Row>())
+                rows_seats_values.Add(row.GetID(), row.GetSeatsBooking());
+
+            Dictionary<string, object> seats_id_booking = new Dictionary<string, object>
+            {
+                ["rows"] = rows_seats_values
+            };
+
+            return seats_id_booking;
         }
     }
 
@@ -404,6 +440,21 @@ namespace StadiumStructure
             }
 
             throw new ArgumentException($"ID = {id}: место с таким ID не найдено");
+        }
+
+        internal override Dictionary<string, object> GetSeatsBooking()
+        {
+            Dictionary<int, bool> seats_values = new Dictionary<int, bool>();
+
+            foreach (Seat seat in children.OfType<Seat>())
+                seats_values.Add(seat.GetID(), seat.GetBooking());
+
+            Dictionary<string, object> seats_id_booking = new Dictionary<string, object>
+            {
+                ["seats"] = seats_values
+            };
+
+            return seats_id_booking;
         }
     }
     internal class Seat : IGrandstand
