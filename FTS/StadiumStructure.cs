@@ -1,7 +1,7 @@
-﻿using Sales;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Sales;
 using Tickets;
 
 namespace StadiumStructure
@@ -117,9 +117,20 @@ namespace StadiumStructure
             log = new Log();
         }
 
-        private ВОЗВРАЩАЕМЫЙ_ТИП ??? GenerateMatchReport(DateTime datetime_start, string team_first, string team_second, sectors_rows_seats_id[])
+        private string GenerateMatchReport(
+            DateTime datetime_start, string team_first, string team_second, Dictionary<int, Dictionary<int, List<int>>> sectors_rows_seats
+        )
         {
+            int count_sectors = sectors_rows_seats.Count;
+            int count_rows = sectors_rows_seats.Sum(sector => sector.Value.Count);
+            int count_seats = sectors_rows_seats.Sum(sector => sector.Value.Sum(row => row.Value.Count));
 
+            return "Отчет по созданному матчу:\n" +
+                   $"- Дата проведения: {datetime_start}\n" +
+                   $"- Команды: {team_first} vs {team_second}\n" +
+                   $"- Количество секторов: {count_sectors}\n" +
+                   $"- Количество рядов: {count_rows}\n" +
+                   $"- Количество мест: {count_seats}\n";
         }
 
         internal void Autharization(byte user_id)
@@ -203,9 +214,36 @@ namespace StadiumStructure
             );
         }
 
-        internal void CreateMatch(DateTime datetime_start, string team_first, string team_second, sectors_rows_seats_id[])
+        internal void CreateMatch(
+            DateTime datetime_start, string team_first, string team_second, Dictionary<int, Dictionary<int, List<int>>> sectors_rows_seats
+        )
         {
+            Match match = new Match(datetime_start, team_first, team_second);
 
+            foreach (KeyValuePair<int, Dictionary<int, List<int>>> sector_data in sectors_rows_seats)
+            {
+                int sector_id = sector_data.Key;
+                Dictionary<int, List<int>> rows_seats = sector_data.Value;
+
+                match.CreateChild(sector_id);
+                Sector sector = match.GetChild(sector_id) as Sector;
+
+                foreach (KeyValuePair<int, List<int>> row_data in rows_seats)
+                {
+                    int row_id = row_data.Key;
+                    List<int> seats_list = row_data.Value;
+
+                    sector.CreateChild(row_id);
+                    Row row = sector.GetChild(row_id) as Row;
+
+                    foreach (int seat_id in seats_list)
+                        row.CreateChild(seat_id);
+                }
+            }
+
+            matches.Add(match);
+
+            Console.WriteLine(GenerateMatchReport(datetime_start, team_first, team_second, sectors_rows_seats));
         }
 
         internal Dictionary<string, object> SelectMatchSeats(int matches_id)
@@ -242,7 +280,7 @@ namespace StadiumStructure
     internal class Match : Grandstand
     {
         private DateTime datetime_start;
-        private DateTime datetime_end;
+        private DateTime datetime_end; // НИГДЕ НЕ НАЗНАЧАЕТСЯ - ОСТАВЛЯЕМ В ТАКОМ ВИДЕ ИЛИ НЕТ ???
         private string team_first;
         private string team_second;
         private List<TicketSingle> tickets;
