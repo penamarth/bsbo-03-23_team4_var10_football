@@ -26,6 +26,14 @@ namespace Sales
             // ЛИБО ОБЩИЙ ПОДСЧЁТ УСТАНОВЛЕННОЙ ЦЕНЫ (текущий код), ЛИБО НАЗНАЧЕНИЕ ЦЕНЫ В ЗАВИСИМОСТИ ОТ ТИПА БИЛЕТА/СЕКТОРА/РЯДА
             return tickets.Sum(ticket => ticket.GetPrice());
         }
+        internal DateTime GetDatetime()
+        {
+            return datetime;
+        }
+        internal List<Ticket> GetTickets()
+        {
+            return tickets;
+        }
 
         internal void CreateTicketSingle(DateTime match_datetime_start, int grandstand_sector, int grandstand_row, int grandstand_seat)
         {
@@ -79,7 +87,7 @@ namespace Sales
 
         internal void MakeLogSale(Log log)
         {
-            log.MakeLogSale(datetime, full_price, tickets);
+            log.MakeLogSale(this);
         }
     }
 
@@ -99,16 +107,94 @@ namespace Sales
 
     internal class Log
     {
-        private List<(DateTime, decimal, List<Ticket>)> sale_operations;
+        private List<Sale> sales_list;
 
         internal Log()
         {
-            sale_operations = new List<(DateTime, decimal, List<Ticket>)>();
+            sales_list = new List<Sale>();
         }
 
-        internal void MakeLogSale(DateTime datetime, decimal full_price, List<Ticket> tickets)
-        { 
-            sale_operations.Add((datetime, full_price, tickets)); // ЗДЕСЬ МОЖНО ОБРАЩАТЬСЯ КО ВСЕМ ТИПАМ БИЛЕТОВ
+        private List<TicketSingle> GetAllTicketSingles()
+        {
+            return sales_list.SelectMany(sale => sale.GetTickets()).OfType<TicketSingle>().ToList();
+        }
+
+        private List<TicketSession> GetAllTicketSessions()
+        {
+            return sales_list.SelectMany(sale => sale.GetTickets()).OfType<TicketSession>().ToList();
+        }
+
+        internal TicketSingle GetTicketSingle(DateTime matchDate, int sector_id, int row_id, int seat_id)
+        {
+            TicketSingle ticket_exist = GetAllTicketSingles().FirstOrDefault(ticket =>
+                {
+                    (int sector, int row, int seat) = ticket.GetSeat();
+
+                    return ticket.GetMatchDatetimeStart() == matchDate &&
+                           sector == sector_id &&
+                           row == row_id &&
+                           seat == seat_id;
+                }
+            );
+
+            return ticket_exist 
+                ??
+                throw new ArgumentException(
+                    "Билет не найден. Введённые параметры:\n" +
+                    $"- начало матча = {matchDate};\n" +
+                    $"- сектор = {sector_id};\n" +
+                    $"- ряд = {row_id};\n" +
+                    $"- место = {seat_id}"
+                );
+        }
+
+        internal TicketSession GetTicketSession(int ticket_session_id)
+        {
+            TicketSession ticket_exist = GetAllTicketSessions().FirstOrDefault(ticket =>
+                ticket.GetID() == ticket_session_id
+            );
+
+            return ticket_exist
+                ??
+                throw new ArgumentException(
+                    "Абонемент не найден. Введённые параметры:\n" +
+                    $"- ID = {ticket_session_id}"
+                );
+        }
+
+        internal TicketSession GetTicketSession(DateTime datetime_start, DateTime datetime_end)
+        {
+            TicketSession ticket_exist = GetAllTicketSessions().FirstOrDefault(ticket => 
+                ticket.GetDatetime() == (datetime_start, datetime_end)
+            );
+
+            return ticket_exist
+                ??
+                throw new ArgumentException(
+                    "Абонемент не найден. Введённые параметры:\n" +
+                    $"- начало действия = {datetime_start};\n" +
+                    $"- конец действия = {datetime_end}"
+                );
+        }
+
+        internal (int total_sale, int total_ticket_single, int total_ticket_session, decimal total_full_price) GetTotalStats()
+        {
+            int total_sale = sales_list.Count;
+            int total_ticket_single = GetAllTicketSingles().Count;
+            int total_ticket_session = GetAllTicketSessions().Count;
+            decimal total_full_price = sales_list.Sum(sale => sale.full_price);
+
+            return (total_sale, total_ticket_single, total_ticket_session, total_full_price);
+        }
+
+        internal Sale GetSale(DateTime datetime)
+        {
+            return (Sale)sales_list.Where(sale => sale.GetDatetime() == datetime);
+        }
+
+        internal void MakeLogSale(Sale sale)
+        {
+            sales_list.Add(sale);
         }
     }
 }
