@@ -10,63 +10,189 @@ namespace Sales
     {
         internal readonly string type;
         private DateTime datetime;
-        internal decimal full_price { get; private set; } // ПОЛЕ ПРЕВРАТИЛОСЬ В СВОЙСТВО - ОСТАВЛЯЕМ ИЛИ МЕНЯЕМ НА НОРМАЛЬНОЕ ПОЛЕ ???
+        internal decimal FullPrice { get; private set; }
         private List<Ticket> tickets;
 
         internal Sale(string type)
         {
+            Console.WriteLine("Вызван конструктор класса Sale: string type");
+
             this.type = type;
             datetime = DateTime.Now;
             tickets = new List<Ticket>();
-            full_price = 0;
+            FullPrice = 0;
         }
 
-        private decimal CalcPrice(decimal price)
+        private decimal CalcPrice() // ВНЕДРИТЬ ПАТТЕРН "СТРАТЕГИЯ" ???
         {
-            // ЛИБО ОБЩИЙ ПОДСЧЁТ УСТАНОВЛЕННОЙ ЦЕНЫ (текущий код), ЛИБО НАЗНАЧЕНИЕ ЦЕНЫ В ЗАВИСИМОСТИ ОТ ТИПА БИЛЕТА/СЕКТОРА/РЯДА
-            return tickets.Sum(ticket => ticket.GetPrice());
+            Console.WriteLine("Вызван метод класса Sale - CalcPrice");
+
+            decimal total = 0;
+
+            foreach (Ticket ticket in tickets)
+            {
+                decimal ticket_price = 0;
+
+                if (ticket is TicketSingle ticket_single)
+                {
+                    (int sector_id, int row_id, int seat_id) = ticket_single.GetSeat();
+
+                    decimal price_base = 100;
+                    decimal price_coef_sector = GetTicketPriceCoefSector(sector_id);
+                    decimal price_coef_row = GetTicketPriceCoefRow(row_id);
+                    decimal price_coef_seat = GetTicketPriceCoefSeat(seat_id);
+
+                    decimal price = price_base * price_coef_sector * price_coef_row * price_coef_seat;
+                    ticket_single.ChangePrice(price);
+                }
+
+                else if (ticket is TicketSession ticket_session)
+                {
+                    (DateTime datetime_start, DateTime datetime_end) = ticket_session.GetDatetime();
+                    int days = (datetime_end - datetime_start).Days;
+                    int sector_id = ticket_session.GetSectorID();
+
+                    decimal price_base = 300;
+                    decimal price_coef_sector = GetTicketPriceCoefSector(sector_id);
+
+                    decimal price = price_base * days * price_coef_sector;
+                    ticket_session.ChangePrice(price);
+                }
+
+                total += ticket_price;
+            }
+
+            return total;
         }
+
+        private decimal GetTicketPriceCoefSector(int sector_id)
+        {
+            Console.WriteLine("Вызван метод класса Sale - GetTicketPriceCoefSector");
+
+            if ((1 <= sector_id) && (sector_id <= 4))  return 1.5m; // Близкие сектора
+            if ((5 <= sector_id) && (sector_id <= 8))  return 1.2m; // Средние сектора
+            if ((9 <= sector_id) && (sector_id <= 12)) return 1.2m; // Дальние сектора
+
+            throw new ArgumentException($"Сектор с ID = {sector_id} не существует");
+        }
+
+        private decimal GetTicketPriceCoefRow(int row_id)
+        {
+            Console.WriteLine("Вызван метод класса Sale - GetTicketPriceCoefRow");
+
+            if ((1 <= row_id) && (row_id <= 3)) return 1.5m; // Близкие ряды
+            if ((4 <= row_id) && (row_id <= 6)) return 1.2m; // Средние ряды
+            if ((7 <= row_id) && (row_id <= 9)) return 1.2m; // Дальние ряды
+
+            throw new ArgumentException($"Ряд с ID = {row_id} не существует");
+        }
+        private decimal GetTicketPriceCoefSeat(int seat_id)
+        {
+            Console.WriteLine("Вызван метод класса Sale - GetTicketPriceCoefSeat");
+
+            if ((5 <= seat_id) && (seat_id <= 7))  return 1.2m;  // центральные места
+            if ((1 <= seat_id) && (seat_id <= 10)) return 1.0m;  // места по краям
+
+            throw new ArgumentException($"Место с ID = {seat_id} не существует");
+        }
+
+        private Dictionary<string, object> GetReceiptData()
+        {
+            Dictionary<string, object> receipt = new Dictionary<string, object>
+            {
+                ["sale_datetime"] = datetime,
+                ["sale_type"] = type,
+                ["total_price"] = FullPrice,
+                ["tickets_count"] = tickets.Count,
+                ["tickets"] = tickets.Select(ticket => GetTicketData(ticket)).ToList()
+            };
+
+            return receipt;
+        }
+
+        private Dictionary<string, object> GetTicketData(Ticket ticket_object)
+        {
+            Dictionary<string, object> ticket_data = new Dictionary<string, object>
+            {
+                ["ticket_type"] = ticket_object.GetType().Name,
+                ["price"] = ticket_object.GetPrice()
+            };
+
+            if (ticket_object is TicketSingle ticket_single)
+            {
+                (int sector, int row, int seat) = ticket_single.GetSeat();
+                ticket_data["match_datetime"] = ticket_single.GetMatchDatetimeStart();
+                ticket_data["sector"] = sector;
+                ticket_data["row"] = row;
+                ticket_data["seat"] = seat;
+            }
+
+            else if (ticket_object is TicketSession ticket_session)
+            {
+                (DateTime datetime_start, DateTime datetime_end) = ticket_session.GetDatetime();
+                ticket_data["datetime_start"] = datetime_start;
+                ticket_data["datetime_end"] = datetime_end;
+                ticket_data["sector_id"] = ticket_session.GetSectorID();
+            }
+
+            return ticket_data;
+        }
+
         internal DateTime GetDatetime()
         {
+            Console.WriteLine("Вызван метод класса Sale - GetDatetime");
+
             return datetime;
         }
         internal List<Ticket> GetTickets()
         {
+            Console.WriteLine("Вызван метод класса Sale - GetTickets");
+
             return tickets;
         }
 
         internal void CreateTicketSingle(DateTime match_datetime_start, int grandstand_sector, int grandstand_row, int grandstand_seat)
         {
+            Console.WriteLine("Вызван метод класса Sale - CreateTicketSingle");
+
             tickets.Add(new TicketSingle(match_datetime_start, grandstand_sector, grandstand_row, grandstand_seat));
         }
 
         internal void CreateTicketSession(DateTime datetime_start, DateTime datetime_end, int sector_id)
         {
+            Console.WriteLine("Вызван метод класса Sale - CreateTicketSession");
+
             tickets.Add(new TicketSession(datetime_start, datetime_end, sector_id));
         }
 
-        internal decimal MakePrice() // ЦЕНА КАЖДОГО БИЛЕТА ЕЩЁ НЕ УСТАНОВЛЕНА - ВЕРОЯТНО, СДЕЛАТЬ УСТАНОВКУ ЗДЕСЬ ПО УСЛОВНЫМ ПАРАМЕТРАМ (НОМЕР СЕКТОРА И ПРОЧЕЕ)
+        internal decimal MakePrice()
         {
-            decimal price = 0;
+            Console.WriteLine("Вызван метод класса Sale - MakePrice");
 
-            // В СХЕМЕ УКАЗАНО, ЧТО CalcPrice ВЫЗЫВАЕТСЯ КАЖДЫЙ РАЗ В ЦИКЛЕ
-            // БУДЕТ ЛИ ЦИКЛ ПОДСЧЁТА ВНУТРИ ЭТОГО МЕТОДА ИЛИ ЦИКЛ БУДЕТ ВЫЗЫВАТЬ ЕГО КАЖДЫЙ РАЗ ???
-            full_price = CalcPrice(price);
+            FullPrice = CalcPrice();
 
-            return full_price;
+            return FullPrice;
         }
 
-        internal void MakePayment(decimal cash) // ВОЗВРАЩЕНИЕ ЧЕКА О ПРОДАЖЕ БИЛЕТОВ ??? - ЛИБО VIEW-КОНТРОЛЛЕР (КЛАСС ТОЛЬКО С ОТКРЫТЫМИ СВОЙСТВАМИ), ЛИБО JSON|МАССИВ
+        internal Dictionary<string, object> MakePayment(decimal cash)
         {
-            if (cash < full_price)
-                throw new InvalidOperationException($"Недостаточно средств для оплаты. Цена продажи: {full_price}, внесено: {cash}");
+            Console.WriteLine("Вызван метод класса Sale - MakePayment");
+
+            if (cash < FullPrice)
+                throw new InvalidOperationException(
+                    $"Недостаточно средств для оплаты. Цена продажи: {FullPrice}, внесено: {cash}"
+                );
 
             Payment payment = new Payment();
             payment.MakePayment(cash);
+
+            return GetReceiptData();
         }
 
         internal void ChangeBooking(Stadium stadium)
         {
+            Console.WriteLine("Вызван метод класса Sale - ChangeBooking");
+
             foreach (TicketSingle ticket in tickets.Cast<TicketSingle>())
             {
                 DateTime ticket_datetime = ticket.GetMatchDatetimeStart();
@@ -75,7 +201,8 @@ namespace Sales
                     stadium.GetMatch(ticket_datetime) 
                     ?? 
                     throw new InvalidOperationException(
-                        $"Отсутствие матча с датой и временем начала {ticket_datetime}: обратитесь к организатору для создания записи о данном матче"
+                        $"Отсутствие матча с датой и временем начала {ticket_datetime}: " +
+                        $"обратитесь к организатору для создания записи о данном матче"
                     );
                 
                 (int, int, int) seat = ticket.GetSeat();
@@ -87,6 +214,8 @@ namespace Sales
 
         internal void MakeLogSale(Log log)
         {
+            Console.WriteLine("Вызван метод класса Sale - MakeLogSale");
+
             log.MakeLogSale(this);
         }
     }
@@ -95,13 +224,17 @@ namespace Sales
     {
         internal Payment()
         {
+            Console.WriteLine("Вызван конструктор класса Payment: без параметров");
+
             // КАКИЕ ПОЛЯ У ОПЛАТЫ ???
         }
 
-        internal void MakePayment(decimal cash) // ВОЗВРАЩЕНИЕ ЧЕКА О ПРОДАЖЕ БИЛЕТОВ ???
+        internal void MakePayment(decimal cash) // ВОЗВРАЩЕНИЕ ОПЛАЧЕННОЙ ЦЕНЫ И ДЕНЕЖНЫХ ПАРАМЕТРОВ ЧЕКА ПРОДАЖИ ???
         {
+            Console.WriteLine("Вызван метод класса Payment - MakePayment");
+
             // КАК БУДЕТ ОСУЩЕСТВЛЯТЬСЯ ОПЛАТА ???
-            // В БУДУЩЕМ ПОДКЛЮЧИТЬ ПАТТЕРН АДАПТЕР (YOMANY) - СДЕЛАТЬ ЗАГЛУШКУ ВМЕСТО ВНЕШНЕЙ СИСТЕМЫ
+            // В БУДУЩЕМ ПОДКЛЮЧИТЬ ПАТТЕРН АДАПТЕР (yoomoney ?) - СДЕЛАТЬ ЗАГЛУШКУ (стаб, мок или фейк?) ВМЕСТО ВНЕШНЕЙ СИСТЕМЫ
         }
     }
 
@@ -111,22 +244,59 @@ namespace Sales
 
         internal Log()
         {
+            Console.WriteLine("Вызван конструктор класса Log: без параметров");
+
             sales_list = new List<Sale>();
         }
 
-        private List<TicketSingle> GetAllTicketSingles()
+        private bool IsTicketActive(Ticket ticket_object)
         {
-            return sales_list.SelectMany(sale => sale.GetTickets()).OfType<TicketSingle>().ToList();
+            if (ticket_object is TicketSingle ticket_single)
+            {
+                return ticket_single.GetMatchDatetimeStart() > DateTime.Now;
+            }
+
+            else
+            {
+                TicketSession ticket_session = (TicketSession)ticket_object;
+                (DateTime datetime_start, DateTime datetime_end) = ticket_session.GetDatetime();
+
+                return DateTime.Now >= datetime_start && DateTime.Now <= datetime_end;
+            }
         }
 
-        private List<TicketSession> GetAllTicketSessions()
+        private List<Ticket> GetAllTickets()
         {
-            return sales_list.SelectMany(sale => sale.GetTickets()).OfType<TicketSession>().ToList();
+            Console.WriteLine("Вызван метод класса Log - GetAllTickets");
+
+            return sales_list.SelectMany(
+                       sale => sale.GetTickets()
+                   ).Where(
+                       ticket => IsTicketActive(ticket)
+                   ).ToList();
+        }
+
+        internal Ticket GetTicket(int ticket_id)
+        {
+            Console.WriteLine("Вызван метод класса Log - GetTicket");
+
+            Ticket ticket_exist = GetAllTickets().FirstOrDefault(ticket =>
+                                      ticket.GetID() == ticket_id
+                                  );
+
+            return ticket_exist
+                ??
+                throw new ArgumentException(
+                    "Билет/абонемент не найден или уже не актуален. Введённые параметры:\n" +
+                    $"- ID = {ticket_id}"
+                );
         }
 
         internal TicketSingle GetTicketSingle(DateTime matchDate, int sector_id, int row_id, int seat_id)
         {
-            TicketSingle ticket_exist = GetAllTicketSingles().FirstOrDefault(ticket =>
+            Console.WriteLine("Вызван метод класса Log - GetTicketSingle");
+
+            TicketSingle ticket_exist = GetAllTickets().OfType<TicketSingle>().FirstOrDefault(ticket =>
                 {
                     (int sector, int row, int seat) = ticket.GetSeat();
 
@@ -140,7 +310,7 @@ namespace Sales
             return ticket_exist 
                 ??
                 throw new ArgumentException(
-                    "Билет не найден. Введённые параметры:\n" +
+                    "Билет не найден или уже не актуален. Введённые параметры:\n" +
                     $"- начало матча = {matchDate};\n" +
                     $"- сектор = {sector_id};\n" +
                     $"- ряд = {row_id};\n" +
@@ -148,52 +318,46 @@ namespace Sales
                 );
         }
 
-        internal TicketSession GetTicketSession(int ticket_session_id)
-        {
-            TicketSession ticket_exist = GetAllTicketSessions().FirstOrDefault(ticket =>
-                ticket.GetID() == ticket_session_id
-            );
-
-            return ticket_exist
-                ??
-                throw new ArgumentException(
-                    "Абонемент не найден. Введённые параметры:\n" +
-                    $"- ID = {ticket_session_id}"
-                );
-        }
-
         internal TicketSession GetTicketSession(DateTime datetime_start, DateTime datetime_end)
         {
-            TicketSession ticket_exist = GetAllTicketSessions().FirstOrDefault(ticket => 
+            Console.WriteLine("Вызван метод класса Log - GetTicketSession: DateTime datetime_start, DateTime datetime_end");
+
+            TicketSession ticket_exist = GetAllTickets().OfType<TicketSession>().FirstOrDefault(ticket => 
                 ticket.GetDatetime() == (datetime_start, datetime_end)
             );
 
             return ticket_exist
                 ??
                 throw new ArgumentException(
-                    "Абонемент не найден. Введённые параметры:\n" +
+                    "Абонемент не найден или уже не актуален. Введённые параметры:\n" +
                     $"- начало действия = {datetime_start};\n" +
                     $"- конец действия = {datetime_end}"
                 );
         }
 
-        internal (int total_sale, int total_ticket_single, int total_ticket_session, decimal total_full_price) GetTotalStats()
+        internal (int total_sale, int total_ticket_single, int total_ticket_session, decimal total_FullPrice) GetTotalStats()
         {
-            int total_sale = sales_list.Count;
-            int total_ticket_single = GetAllTicketSingles().Count;
-            int total_ticket_session = GetAllTicketSessions().Count;
-            decimal total_full_price = sales_list.Sum(sale => sale.full_price);
+            Console.WriteLine("Вызван метод класса Log - GetTotalStats");
 
-            return (total_sale, total_ticket_single, total_ticket_session, total_full_price);
+            int total_sale = sales_list.Count;
+            int total_ticket_single = GetAllTickets().OfType<TicketSingle>().Count();
+            int total_ticket_session = GetAllTickets().OfType<TicketSession>().Count();
+            decimal total_FullPrice = sales_list.Sum(sale => sale.FullPrice);
+
+            return (total_sale, total_ticket_single, total_ticket_session, total_FullPrice);
         }
 
         internal Sale GetSale(DateTime datetime)
         {
+            Console.WriteLine("Вызван метод класса Log - GetSale");
+
             return (Sale)sales_list.Where(sale => sale.GetDatetime() == datetime);
         }
 
         internal void MakeLogSale(Sale sale)
         {
+            Console.WriteLine("Вызван метод класса Log - MakeLogSale");
+
             sales_list.Add(sale);
         }
     }
