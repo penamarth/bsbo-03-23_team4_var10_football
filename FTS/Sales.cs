@@ -184,9 +184,15 @@ namespace Sales
                 );
 
             Payment payment = new Payment();
-            payment.MakePayment(cash);
+            Dictionary<string, object> payment_result = payment.MakePayment(cash);
+            Dictionary<string, object> receipt = GetReceiptData();
 
-            return GetReceiptData();
+            decimal change = cash - FullPrice;
+            payment_result.Add("change", change);
+
+            receipt["payment_info"] = payment_result;
+
+            return receipt;
         }
 
         internal void ChangeBooking(Stadium stadium)
@@ -220,21 +226,74 @@ namespace Sales
         }
     }
 
-    internal class Payment
+    internal interface IPayment
     {
-        internal Payment()
-        {
-            Console.WriteLine("Вызван конструктор класса Payment: без параметров");
+        Dictionary<string, object> ProcessPayment(decimal cash);
+    }
 
-            // КАКИЕ ПОЛЯ У ОПЛАТЫ ???
+    internal class PaymentMock : IPayment
+    {
+        public PaymentMock()
+        {
+            Console.WriteLine("Вызван конструктор класса PaymentMock");
         }
 
-        internal void MakePayment(decimal cash) // ВОЗВРАЩЕНИЕ ОПЛАЧЕННОЙ ЦЕНЫ И ДЕНЕЖНЫХ ПАРАМЕТРОВ ЧЕКА ПРОДАЖИ ???
+        public Dictionary<string, object> ProcessPayment(decimal cash)
+        {
+            Console.WriteLine($"Вызван метод класса PaymentMock - ProcessPayment");
+
+            return new Dictionary<string, object>
+            {
+                ["date"] = DateTime.Now,
+                ["success"] = true,
+                ["cash_paid"] = cash,
+                ["currency"] = "RUB"
+            };
+        }
+    }
+
+    internal class PaymentAdapter : IPayment
+    {
+        private readonly IPayment mock_object;
+
+        public PaymentAdapter()
+        {
+            Console.WriteLine("Вызван конструктор класса PaymentAdapter");
+
+            mock_object = new PaymentMock();
+        }
+
+        public Dictionary<string, object> ProcessPayment(decimal cash)
+        {
+            Console.WriteLine("Вызван метод класса PaymentAdapter - ProcessPayment");
+
+            return mock_object.ProcessPayment(cash);
+        }
+    }
+
+    internal class Payment
+    {
+        private readonly IPayment adapter_object;
+
+        internal Payment()
+        {
+            Console.WriteLine("Вызван конструктор класса Payment");
+
+            adapter_object = new PaymentAdapter();
+        }
+
+        internal Dictionary<string, object> MakePayment(decimal cash)
         {
             Console.WriteLine("Вызван метод класса Payment - MakePayment");
 
-            // КАК БУДЕТ ОСУЩЕСТВЛЯТЬСЯ ОПЛАТА ???
-            // В БУДУЩЕМ ПОДКЛЮЧИТЬ ПАТТЕРН АДАПТЕР (yoomoney ?) - СДЕЛАТЬ ЗАГЛУШКУ (стаб, мок или фейк?) ВМЕСТО ВНЕШНЕЙ СИСТЕМЫ
+            Dictionary<string, object> result = adapter_object.ProcessPayment(cash);
+
+            if (!Convert.ToBoolean(result["success"]))
+                throw new InvalidOperationException("Оплата не прошла по техническим причинам. Обратитесь к системному администратору");
+
+            Console.WriteLine($"Оплата завершена успешно! ID транзакции: {Convert.ToInt32(result["transaction_id"])}");
+
+            return result;
         }
     }
 
