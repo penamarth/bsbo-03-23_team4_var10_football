@@ -1,68 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using StadiumStructure;
-using Tickets;
+using StadiumSpace;
+using GrandstandSpace;
+using TicketSpace;
 
-namespace Sales
+namespace SaleSpace
 {
-    internal class Sale
+    internal interface IPriceStrategy
     {
-        internal readonly string type;
-        private DateTime datetime;
-        internal decimal FullPrice { get; private set; }
-        private List<Ticket> tickets;
+        decimal CalculatePrice(Ticket ticket_object);
+    }
 
-        internal Sale(string type)
+    internal class TicketSinglePriceStrategy : IPriceStrategy
+    {
+        internal TicketSinglePriceStrategy()
         {
-            Console.WriteLine("Вызван конструктор класса Sale: string type");
-
-            this.type = type;
-            datetime = DateTime.Now;
-            tickets = new List<Ticket>();
-            FullPrice = 0;
+            Console.WriteLine("Вызван конструктор класса TicketSinglePriceStrategy без параметров");
         }
 
-        private decimal CalcPrice() // ВНЕДРИТЬ ПАТТЕРН "СТРАТЕГИЯ" ???
+        public decimal CalculatePrice(Ticket ticket_object)
         {
-            Console.WriteLine("Вызван метод класса Sale - CalcPrice");
+            Console.WriteLine("Вызван метод TicketSinglePriceStrategy - CalculatePrice");
 
-            decimal total = 0;
-
-            foreach (Ticket ticket in tickets)
+            if (ticket_object is TicketSingle ticket_single)
             {
-                decimal ticket_price = 0;
+                (int sector_id, int row_id, int seat_id) = ticket_single.GetSeat();
 
-                if (ticket is TicketSingle ticket_single)
-                {
-                    (int sector_id, int row_id, int seat_id) = ticket_single.GetSeat();
+                decimal price_base = 100;
+                decimal price_coef_sector = GetTicketPriceCoefSector(sector_id);
+                decimal price_coef_row = GetTicketPriceCoefRow(row_id);
+                decimal price_coef_seat = GetTicketPriceCoefSeat(seat_id);
 
-                    decimal price_base = 100;
-                    decimal price_coef_sector = GetTicketPriceCoefSector(sector_id);
-                    decimal price_coef_row = GetTicketPriceCoefRow(row_id);
-                    decimal price_coef_seat = GetTicketPriceCoefSeat(seat_id);
-
-                    decimal price = price_base * price_coef_sector * price_coef_row * price_coef_seat;
-                    ticket_single.ChangePrice(price);
-                }
-
-                else if (ticket is TicketSession ticket_session)
-                {
-                    (DateTime datetime_start, DateTime datetime_end) = ticket_session.GetDatetime();
-                    int days = (datetime_end - datetime_start).Days;
-                    int sector_id = ticket_session.GetSectorID();
-
-                    decimal price_base = 300;
-                    decimal price_coef_sector = GetTicketPriceCoefSector(sector_id);
-
-                    decimal price = price_base * days * price_coef_sector;
-                    ticket_session.ChangePrice(price);
-                }
-
-                total += ticket_price;
+                decimal ticket_price = price_base * price_coef_sector * price_coef_row * price_coef_seat;
+                return ticket_price;
             }
 
-            return total;
+            throw new ArgumentException("Данная стратегия предназначена только для обычных билетов");
         }
 
         private decimal GetTicketPriceCoefSector(int sector_id)
@@ -94,6 +68,52 @@ namespace Sales
             if ((1 <= seat_id) && (seat_id <= 10)) return 1.0m;  // места по краям
 
             throw new ArgumentException($"Место с ID = {seat_id} не существует");
+        }
+    }
+
+    internal class TicketSessionPriceStrategy : IPriceStrategy
+    {
+        internal TicketSessionPriceStrategy()
+        {
+            Console.WriteLine("Вызван конструктор класса TicketSessionPriceStrategy без параметров");
+        }
+
+        public decimal CalculatePrice(Ticket ticket_object)
+        {
+            Console.WriteLine("Вызван метод TicketSessionPriceStrategy - CalculatePrice");
+
+            if (ticket_object is TicketSession ticketSession)
+            {
+                (DateTime datetime_start, DateTime datetime_end) = ticketSession.GetDatetime();
+
+                int days = (datetime_end - datetime_start).Days;
+                decimal price_base = 300;
+
+                decimal ticket_price = price_base * days;
+                return ticket_price;
+            }
+
+            throw new ArgumentException("Данная стратегия предназначена только для абонементов");
+        }
+    }
+
+    internal class Sale
+    {
+        internal readonly string type;
+        private IPriceStrategy price_strategy_object;
+        private DateTime datetime;
+        internal decimal FullPrice { get; private set; }
+        private List<Ticket> tickets;
+
+        internal Sale(string type, IPriceStrategy price_strategy_object)
+        {
+            Console.WriteLine("Вызван конструктор класса Sale: string type, IPriceStrategy price_strategy_object");
+
+            this.type = type;
+            this.price_strategy_object = price_strategy_object;
+            datetime = DateTime.Now;
+            tickets = new List<Ticket>();
+            FullPrice = 0;
         }
 
         private Dictionary<string, object> GetReceiptData()
@@ -165,11 +185,23 @@ namespace Sales
             tickets.Add(new TicketSession(datetime_start, datetime_end, sector_id));
         }
 
+        internal void SetPriceStrategy(IPriceStrategy price_strategy_object)
+        {
+            Console.WriteLine("Вызван метод класса Sale - SetPriceStrategy");
+
+            this.price_strategy_object = price_strategy_object;
+        }
+
         internal decimal MakePrice()
         {
             Console.WriteLine("Вызван метод класса Sale - MakePrice");
 
-            FullPrice = CalcPrice();
+            foreach (Ticket ticket in tickets)
+            {
+                decimal ticket_price = price_strategy_object.CalculatePrice(ticket);
+                ticket.ChangePrice(ticket_price);
+                FullPrice += ticket_price;
+            }
 
             return FullPrice;
         }

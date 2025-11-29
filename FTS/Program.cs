@@ -1,4 +1,5 @@
-﻿using StadiumStructure;
+﻿using System;
+using StadiumSpace;
 
 namespace FTS
 {
@@ -6,7 +7,7 @@ namespace FTS
     {
         static void Main()
         {
-
+            
         }
     }
 }

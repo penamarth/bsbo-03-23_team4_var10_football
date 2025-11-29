@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Tickets
+namespace TicketSpace
 {
     internal abstract class Ticket
     {
