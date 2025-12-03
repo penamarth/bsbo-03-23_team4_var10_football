@@ -46,7 +46,8 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sales.cs" />
-    <Compile Include="StadiumStructure.cs" />
+    <Compile Include="Stadium.cs" />
+    <Compile Include="Grandstands.cs" />
     <Compile Include="Tickets.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -171,6 +171,13 @@ namespace GrandstandSpace
             this.datetime_end = datetime_end;
         }
 
+        internal (string team_first, string team_second) GetTeams()
+        {
+            Console.WriteLine("Вызван метод класса Match - GetTeams");
+
+            return (team_first, team_second);
+        }
+
         internal void ChangeTeams(string team_first, string team_second)
         {
             Console.WriteLine("Вызван метод класса Match - ChangeTeams");
@@ -376,7 +383,10 @@ namespace GrandstandSpace
             foreach (Seat seat in children)
             {
                 if (seat.GetID() == id)
+                {
                     seat.ChangeBooking(booking);
+                    return;
+                }
             }
 
             throw new ArgumentException($"ID = {id}: место с таким ID не найдено");

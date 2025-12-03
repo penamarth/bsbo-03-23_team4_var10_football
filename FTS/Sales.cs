@@ -82,9 +82,9 @@ namespace SaleSpace
         {
             Console.WriteLine("Вызван метод TicketSessionPriceStrategy - CalculatePrice");
 
-            if (ticket_object is TicketSession ticketSession)
+            if (ticket_object is TicketSession ticket_session)
             {
-                (DateTime datetime_start, DateTime datetime_end) = ticketSession.GetDatetime();
+                (DateTime datetime_start, DateTime datetime_end) = ticket_session.GetDatetime();
 
                 int days = (datetime_end - datetime_start).Days;
                 decimal price_base = 300;
@@ -265,6 +265,7 @@ namespace SaleSpace
 
     internal class PaymentMock : IPayment
     {
+        private static int transaction_counter = 0;
         public PaymentMock()
         {
             Console.WriteLine("Вызван конструктор класса PaymentMock");
@@ -276,6 +277,7 @@ namespace SaleSpace
 
             return new Dictionary<string, object>
             {
+                ["transaction_id"] = $"ID_{transaction_counter++}",
                 ["date"] = DateTime.Now,
                 ["success"] = true,
                 ["cash_paid"] = cash,
@@ -323,7 +325,7 @@ namespace SaleSpace
             if (!Convert.ToBoolean(result["success"]))
                 throw new InvalidOperationException("Оплата не прошла по техническим причинам. Обратитесь к системному администратору");
 
-            Console.WriteLine($"Оплата завершена успешно! ID транзакции: {Convert.ToInt32(result["transaction_id"])}");
+            Console.WriteLine($"Оплата завершена успешно! ID транзакции: {result["transaction_id"]}");
 
             return result;
         }

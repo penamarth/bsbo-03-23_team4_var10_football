@@ -9,6 +9,7 @@ namespace StadiumSpace
     internal class Stadium
     {
         private byte user_id;
+        private bool editing_mod;
         private List<Match> matches;
         private Sale sale_current;
         private Dictionary<string, IPriceStrategy> price_strategy_list;
@@ -49,9 +50,9 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - Autharization");
 
-            if (user_id == 0)
+            if ((user_id < 1) || (user_id > 3))
                 throw new InvalidOperationException(
-                    "Невозможно авторизоваться в системе с уровнем доступа 0"
+                    $"В системе доступны только 3 уровня доступа: 1, 2, 3. Ваш введённый уровень: {user_id}"
                 );
 
             if (this.user_id != user_id)
@@ -67,7 +68,7 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - CreateSale");
 
-            if (user_id < 2)
+            if (user_id >= 2)
             {
                 if (sale_current != null)
                     throw new InvalidOperationException($"Текущая продажа не завершена. Закройте её, после чего повторите попытку создания продажи");
@@ -89,7 +90,7 @@ namespace StadiumSpace
             else
                 throw new InvalidOperationException(
                     "Ваш уровень доступа не позволяет исполнить вызов данной процедуры:\n" +
-                    "- требуемый уровень: 2 или 3\n" +
+                    "- требуемый уровень: 2, 3\n" +
                     $"- Ваш уровень: {user_id}"
                 );
         }
@@ -98,7 +99,7 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - CloseSale");
 
-            if (user_id < 2)
+            if (user_id >= 2)
             {
                 if (sale_current != null)
                 {
@@ -111,7 +112,7 @@ namespace StadiumSpace
             else
                 throw new InvalidOperationException(
                     "Ваш уровень доступа не позволяет исполнить вызов данной процедуры:\n" +
-                    "- требуемый уровень: 2 или 3\n" +
+                    "- требуемый уровень: 2, 3\n" +
                     $"- Ваш уровень: {user_id}"
                 );
         }
@@ -120,7 +121,7 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - SetPriceStrategy");
 
-            if (user_id < 2)
+            if (user_id >= 2)
             {
                 if (sale_current == null)
                     throw new InvalidOperationException(
@@ -140,7 +141,9 @@ namespace StadiumSpace
             }
             else
                 throw new InvalidOperationException(
-                    "Ваш уровень доступа не позволяет изменить стратегию ценообразования"
+                    "Ваш уровень доступа не позволяет изменить стратегию ценообразования:\n" +
+                    "- требуемый уровень: 2, 3\n" +
+                    $"- Ваш уровень: {user_id}"
                 );
         }
 
@@ -148,7 +151,7 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - MakePrice");
 
-            if (user_id < 2)
+            if (user_id >= 2)
             {
                 if (sale_current == null)
                     throw new InvalidOperationException("Нет текущей продажи. Создайте её, внести билеты/абонемент для продажи и повторите попытку подсчёта цены продажи");
@@ -161,7 +164,7 @@ namespace StadiumSpace
             else
                 throw new InvalidOperationException(
                     "Ваш уровень доступа не позволяет исполнить вызов данной процедуры:\n" +
-                    "- требуемый уровень: 2 или 3\n" +
+                    "- требуемый уровень: 2, 3\n" +
                     $"- Ваш уровень: {user_id}"
                 );
         }
@@ -170,7 +173,7 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - MakePayment");
 
-            if (user_id < 2)
+            if (user_id >= 2)
             {
                 if (sale_current == null)
                     throw new InvalidOperationException("Нет текущей продажи. Создайте её, внести билеты/абонемент для продажи, подсчитайте их цену и повторите попытку оплаты");
@@ -192,7 +195,7 @@ namespace StadiumSpace
             else
                 throw new InvalidOperationException(
                     "Ваш уровень доступа не позволяет исполнить вызов данной процедуры:\n" +
-                    "- требуемый уровень: 2 или 3\n" +
+                    "- требуемый уровень: 2, 3\n" +
                     $"- Ваш уровень: {user_id}"
                 );
         }
@@ -201,7 +204,7 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - CreateTicketSingle");
 
-            if (user_id < 2)
+            if (user_id >= 2)
             {
                 if (sale_current == null)
                     throw new InvalidOperationException("Нет текущей продажи. Создайте её и повторите попытку создания билета");
@@ -215,7 +218,7 @@ namespace StadiumSpace
             else
                 throw new InvalidOperationException(
                     "Ваш уровень доступа не позволяет исполнить вызов данной процедуры:\n" +
-                    "- требуемый уровень: 2 или 3\n" +
+                    "- требуемый уровень: 2, 3\n" +
                     $"- Ваш уровень: {user_id}"
                 );
         }
@@ -224,7 +227,7 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - CreateTicketSession");
 
-            if (user_id < 2)
+            if (user_id >= 2)
             {
                 if (sale_current == null)
                     throw new InvalidOperationException("Нет текущей продажи. Создайте её и повторите попытку создания абонемента");
@@ -238,7 +241,7 @@ namespace StadiumSpace
             else
                 throw new InvalidOperationException(
                     "Ваш уровень доступа не позволяет исполнить вызов данной процедуры:\n" +
-                    "- требуемый уровень: 2 или 3\n" +
+                    "- требуемый уровень: 2, 3\n" +
                     $"- Ваш уровень: {user_id}"
                 );
         }
@@ -249,8 +252,13 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - CreateMatch");
 
-            if (user_id < 3)
+            if (user_id == 3)
             {
+                if (!editing_mod)
+                    throw new InvalidOperationException(
+                        "Режим редактирования матчей не активирован. Активируйте его и повторите операцию"
+                    );
+
                 Match match = new Match(datetime_start, team_first, team_second);
 
                 foreach (KeyValuePair<int, Dictionary<int, List<int>>> sector_data in sectors_rows_seats)
@@ -290,12 +298,12 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - SelectMatchSeats");
 
-            if (user_id < 1)
+            if (user_id >= 1)
                 return matches[matches_id].GetSeatsBooking();
             else
                 throw new InvalidOperationException(
                     "Ваш уровень доступа не позволяет исполнить вызов данной процедуры:\n" +
-                    "- требуемый уровень: 3\n" +
+                    "- требуемый уровень: 1, 2, 3\n" +
                     $"- Ваш уровень: {user_id}"
                 );
         }
@@ -304,12 +312,12 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - GetMatch");
 
-            if (user_id < 1)
+            if (user_id >= 1)
                 return matches.FirstOrDefault(match => match.GetDatetimeStart() == datetime_start);
             else
                 throw new InvalidOperationException(
                     "Ваш уровень доступа не позволяет исполнить вызов данной процедуры:\n" +
-                    "- требуемый уровень: 1\n" +
+                    "- требуемый уровень: 1, 2, 3\n" +
                     $"- Ваш уровень: {user_id}"
                 );
         }
@@ -318,12 +326,12 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - GetMatches");
 
-            if (user_id < 1)
+            if (user_id >= 1)
                 return matches;
             else
                 throw new InvalidOperationException(
                     "Ваш уровень доступа не позволяет исполнить вызов данной процедуры:\n" +
-                    "- требуемый уровень: 1\n" +
+                    "- требуемый уровень: 1, 2, 3\n" +
                     $"- Ваш уровень: {user_id}"
                 );
         }
@@ -332,8 +340,16 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - OpenEditingMatch");
 
-            if (user_id < 3)
-                Console.WriteLine($"Вы активировали режим редактирования матчей");
+            if (user_id == 3)
+            {
+                if (editing_mod)
+                    Console.WriteLine($"Режим редактирования матчей уже активирован");
+                else
+                {
+                    editing_mod = true;
+                    Console.WriteLine($"Вы активировали режим редактирования матчей");
+                }
+            }
             else
                 throw new InvalidOperationException(
                     "Ваш уровень доступа не позволяет исполнить вызов данной процедуры:\n" +
@@ -346,8 +362,16 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - CloseEditingMatch");
 
-            if (user_id < 3)
-                Console.WriteLine($"Вы вышли из режима редактирования матчей");
+            if (user_id == 3)
+            {
+                if (!editing_mod)
+                    Console.WriteLine($"Режим редактирования матчей уже деактивироан");
+                else
+                {
+                    editing_mod = false;
+                    Console.WriteLine($"Вы вышли из режима редактирования матчей");
+                }
+            }
             else
                 throw new InvalidOperationException(
                     "Ваш уровень доступа не позволяет исполнить вызов данной процедуры:\n" +
@@ -360,12 +384,26 @@ namespace StadiumSpace
         {
             Console.WriteLine("Вызван метод класса Stadium - Quit");
 
-            if (user_id < 1)
-                Console.WriteLine($"Операция успешно завершена");
+            if (user_id >= 1)
+            {
+                if (sale_current != null)
+                    Console.WriteLine("ВНИМАНИЕ: Незавершенная продажа будет отменена!");
+
+                if (editing_mod)
+                {
+                    Console.WriteLine("ВНИМАНИЕ: Режим редактирования матчей будет закрыт!");
+                    editing_mod = false;
+                }
+
+                sale_current = null;
+                user_id = 0;
+
+                Console.WriteLine("Сессия успешно завершена. Вы вышли из системы.");
+            }
             else
                 throw new InvalidOperationException(
                     "Ваш уровень доступа не позволяет исполнить вызов данной процедуры:\n" +
-                    "- требуемый уровень: 1\n" +
+                    "- требуемый уровень: 1, 2, 3\n" +
                     $"- Ваш уровень: {user_id}"
                 );
         }
