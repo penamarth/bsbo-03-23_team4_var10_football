@@ -23,21 +23,47 @@ namespace FTS
 
             stadium.OpenEditingMatch();
 
-            var sectors_rows_seats = new Dictionary<int, Dictionary<int, List<int>>>
+            var sectors_rows_seats = new Dictionary<int, Dictionary<string, object>>
             {
                 // Сектор 1
                 {
-                    1, new Dictionary<int, List<int>>
+                    1, new Dictionary<string, object>
                     {
-                        { 1, new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } },  // Ряд 1
+                        ["session_ticket_only"] = false,
+                        ["rows"] = new Dictionary<int, List<int>> 
+                        {
+                            { 
+                                1, new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } // Ряд 1
+                            }
+                        },  
                     }
                 },
     
                 // Сектор 2
                 {
-                    2, new Dictionary<int, List<int>>
+                    2, new Dictionary<string, object>
                     {
-                        { 1, new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } },  // Ряд 1
+                        ["session_ticket_only"] = false,
+                        ["rows"] = new Dictionary<int, List<int>>
+                        {
+                            {
+                                1, new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } // Ряд 2
+                            }
+                        },
+                    }
+                },
+
+                // Сектор 3 (только для абонементов)
+                {
+                    3, new Dictionary<string, object>
+                    {
+                        ["session_ticket_only"] = true,
+                        ["rows"] = new Dictionary<int, List<int>>
+                        {
+                            {
+                                1, new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } // Ряд 2
+                            }
+                        },
                     }
                 },
             };
@@ -99,7 +125,7 @@ namespace FTS
             stadium.CreateTicketSession(
                 Convert.ToDateTime("2025-12-01 00:00:00"),
                 Convert.ToDateTime("2025-12-31 23:59:59"),
-                2 // не указали при создании матча, что 2 сектор только для абонементов - исправим или оставим так ???
+                3
             );
 
             var full_price_session = stadium.MakePrice();
@@ -158,7 +184,7 @@ namespace FTS
             Console.WriteLine($"- Статус: {(Convert.ToBoolean(payment_info["success"]) ? "УСПЕШНО" : "ОШИБКА")}");
 
             var tickets = receipt_data["tickets"] as List<Dictionary<string, object>>;
-            Console.WriteLine("2) Информация о билетах/абонементе:");
+            Console.WriteLine("3) Информация о билетах/абонементе:");
             for (int i = 0; i < tickets.Count; i++)
             {
                 var ticket = tickets[i];
@@ -238,7 +264,7 @@ namespace FTS
 
                     bool is_session_only = Convert.ToBoolean(sector_data["ticket_session_only"]);
 
-                    Console.WriteLine($"\nСектор {sector_id} {(is_session_only ? "(только абонементы)" : "")}");
+                    Console.WriteLine($"\nСектор {sector_id}");
                     Console.WriteLine(new string('-', 40));
 
                     foreach (var row in rows.OrderBy(r => r.Key))

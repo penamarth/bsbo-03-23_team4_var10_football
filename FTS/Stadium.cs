@@ -29,21 +29,35 @@ namespace StadiumSpace
         }
 
         private string GenerateMatchReport(
-            DateTime datetime_start, string team_first, string team_second, Dictionary<int, Dictionary<int, List<int>>> sectors_rows_seats
+            DateTime datetime_start, string team_first, string team_second, Dictionary<int, Dictionary<string, object>> sectors_data
         )
         {
             Console.WriteLine("Вызван метод класса Stadium - GenerateMatchReport");
 
-            int count_sectors = sectors_rows_seats.Count;
-            int count_rows = sectors_rows_seats.Sum(sector => sector.Value.Count);
-            int count_seats = sectors_rows_seats.Sum(sector => sector.Value.Sum(row => row.Value.Count));
+            int count_sectors = sectors_data.Count;
+
+            int count_rows = sectors_data.Sum(sector => (
+                (Dictionary<int, List<int>>)sector.Value["rows"]).Count
+            );
+
+            int count_seats = sectors_data.Sum(sector => (
+                    (Dictionary<int, List<int>>)sector.Value["rows"]
+                ).Sum(
+                    row => row.Value.Count
+                )
+            );
+
+            int session_only_sectors = sectors_data.Count(s =>
+                Convert.ToBoolean(s.Value["session_ticket_only"])
+            );
 
             return "Отчет по созданному матчу:\n" +
-                   $"- Дата проведения: {datetime_start}\n" +
-                   $"- Команды: {team_first} vs {team_second}\n" +
-                   $"- Количество секторов: {count_sectors}\n" +
-                   $"- Количество рядов: {count_rows}\n" +
-                   $"- Количество мест: {count_seats}\n";
+                    $"- Дата проведения: {datetime_start}\n" +
+                    $"- Команды: {team_first} vs {team_second}\n" +
+                    $"- Количество секторов: {count_sectors}\n" +
+                    $"- Секторов только для абонементов: {session_only_sectors}\n" +
+                    $"- Количество рядов: {count_rows}\n" +
+                    $"- Количество мест: {count_seats}\n";
         }
 
         internal void Autharization(byte user_id)
@@ -247,7 +261,7 @@ namespace StadiumSpace
         }
 
         internal void CreateMatch(
-            DateTime datetime_start, string team_first, string team_second, Dictionary<int, Dictionary<int, List<int>>> sectors_rows_seats
+            DateTime datetime_start, string team_first, string team_second, Dictionary<int, Dictionary<string, object>> sectors_rows_seats
         )
         {
             Console.WriteLine("Вызван метод класса Stadium - CreateMatch");
@@ -261,13 +275,15 @@ namespace StadiumSpace
 
                 Match match = new Match(datetime_start, team_first, team_second);
 
-                foreach (KeyValuePair<int, Dictionary<int, List<int>>> sector_data in sectors_rows_seats)
+                foreach (KeyValuePair<int, Dictionary<string, object>> sector_data in sectors_rows_seats)
                 {
                     int sector_id = sector_data.Key;
-                    Dictionary<int, List<int>> rows_seats = sector_data.Value;
+                    bool ticket_session_only = Convert.ToBoolean(sector_data.Value["session_ticket_only"]);
+                    Dictionary<int, List<int>> rows_seats = (Dictionary<int, List<int>>)sector_data.Value["rows"];
 
                     match.CreateChild(sector_id);
                     Sector sector = match.GetChild(sector_id) as Sector;
+                    sector.ChangeTicketSessionOnlyStatus(ticket_session_only);
 
                     foreach (KeyValuePair<int, List<int>> row_data in rows_seats)
                     {
